@@ -1,9 +1,15 @@
 import { Form, useLoaderData, useFetcher } from 'react-router-dom';
-import { getContact } from '../contacts';
-import { updateContact } from '../contacts';
+import { getContact, updateContact } from '../contacts';
 
 export async function loader({ params }) {
-    return getContact(params.contactId);
+    const contact = await getContact(params.contactId);
+    if (!contact) {
+        throw new Response('', {
+            status: 404,
+            statusText: 'Not Found',
+        });
+    }
+    return contact;
 }
 
 export async function action({ request, params }) {
@@ -76,6 +82,9 @@ function Favorite({ contact }) {
     const fetcher = useFetcher();
     // yes, this is a `let` for later
     let favorite = contact.favorite;
+    if (fetcher.formData) {
+        favorite = fetcher.formData.get('favorite') === 'true';
+    }
     return (
         <fetcher.Form method="post">
             <button
